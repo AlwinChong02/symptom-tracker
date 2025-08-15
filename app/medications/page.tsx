@@ -1,7 +1,9 @@
+"use client";
+
 import { useState, useEffect, useCallback } from 'react';
-import AddMedicationForm from '../components/medications/AddMedicationForm';
-import MedicationList from '../components/medications/MedicationList';
-import { getMedications } from '../lib/api';
+import AddMedicationForm from '../../components/medications/AddMedicationForm';
+import MedicationList from '../../components/medications/MedicationList';
+import { getMedications } from '../../lib/api';
 
 export default function MedicationsPage() {
   const [medications, setMedications] = useState([]);

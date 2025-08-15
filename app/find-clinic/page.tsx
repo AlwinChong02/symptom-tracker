@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from 'react';
-import ClinicMap from '../components/clinics/ClinicMap';
+import ClinicMap from '../../components/clinics/ClinicMap';
 
 export default function FindClinicPage() {
   const [error, setError] = useState('');

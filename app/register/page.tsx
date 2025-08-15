@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -8,7 +10,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 

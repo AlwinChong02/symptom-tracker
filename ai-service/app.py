@@ -33,34 +33,81 @@ def symptom_check():
 
     if len(history) >= 10:
         prompt = f"""
-        The conversation history is:\n{conversation}\n
-        You have reached the maximum number of questions (10). Based on the complete history, you MUST provide a final analysis with possible causes and recommended actions. Do not ask any more questions.
-        """ + """
-        Respond in JSON format for a final analysis: { 'summary': '...', 'suggested_causes': [{'title': '...', 'description': '...'}], 'treatment_plans': [{'title': '...', 'description': '...'}], 'is_final': true }
-        """
+            The conversation history is:\n{conversation}\n
+            You have reached the maximum number of questions (10). Based on the complete history, you MUST provide a final analysis with possible causes and recommended actions. Do not ask any more questions.
+            """ + """
+            Respond in JSON format for a final analysis: { 'summary': '...', 'suggested_causes': [{'title': '...', 'description': '...'}], 'treatment_plans': [{'title': '...', 'description': '...'}], 'is_final': true }
+            """
         
     elif len(history) == 0:
-        # Initial question
+        # For Initial question
         prompt = """
-        You are an AI medical assistant. Your first task is to ask the user a single, clear question about their primary symptom or the most concerning problem they're experiencing.
-        Provide 4-5 relevant options for the user to choose from.
-        Format the output as a JSON object with three keys: 'question' (a single string), 'options' (an array of strings), and 'is_final' (boolean, set to false).
-        Example: {"question": "What is your primary symptom or the most concerning problem you're experiencing?", "options": ["Chest pain", "Difficulty breathing", "Abdominal pain", "Severe headache", "Dizziness/Lightheadedness"], "is_final": false}
-        """
+            You are a helpful and professional AI Medical Assistant. Your goal is to initiate a conversation to understand a user's health concern in a welcoming and clear manner.
+
+            YOUR TASK:
+            Generate the very first message for the user. This message must include:
+
+            1. A brief, friendly greeting.
+            2. A single, clear question to identify their primary symptom.
+            3. A list of 5-6 common, high-level symptom categories as options.
+            4. An "Other" or "Something else" option to ensure the user can always proceed.   
+            
+            FORMATTING INSTRUCTIONS:
+            Format the output as a single JSON object with the following keys:
+            'question': The question to ask the user.
+            'options': A list of options for the user to choose from.
+            'is_final': A boolean indicating whether this is the final response.
+            
+            Example: 
+            {
+                "question": "What is the primary symptom or health concern you are experiencing?",
+                "options": [
+                    "Head, Neck, or Throat Issue",
+                    "Chest or Abdominal Pain",
+                    "Fever or Flu-like Symptoms",
+                    "Skin Issue (e.g., rash, lump)",
+                    "Dizziness or Weakness",
+                    "Something else"
+                ],
+                "is_final": false
+            }
+            """
     else:
+        # For follow-up questions
         prompt = f"""
-        You are an AI medical assistant continuing a conversation with a user about their symptoms. You have already asked the primary symptom. Now, ask a follow-up question to better understand their condition based on the conversation history:
-        {conversation}
+            You are an AI Medical Triage Assistant. Your primary goal is to help users understand their symptoms by asking targeted questions. You must be empathetic, clear, and cautious.
 
-        Ask the next most relevant question to diagnose the issue and provide 4-5 helpful options.
-        If you have sufficient information, provide a final analysis with possible causes and recommended actions.
-        You can ask a maximum of 10 questions in total. Please check the conversation length before asking a new question.
-        """ + """
-        Respond in JSON. 
-        For a question: {"question": "...", "options": ["..."], "is_final": false}
-        For a final analysis: {"summary": "...", "suggested_causes": [{"title": "...", "description": "..."}], "treatment_plans": [{"title": "...", "description": "..."}], "is_final": true}
-        """
+            CRITICAL DIRECTIVES:
 
+            You are NOT a doctor. Your analysis is not a diagnosis. Your primary function is to gather information and suggest appropriate next steps.
+            Emergency Detection: If at any point the user's symptoms suggest a medical emergency (e.g., severe chest pain, difficulty breathing, uncontrolled bleeding, sudden confusion, signs of a stroke), your only response must be a final analysis advising them to contact emergency services immediately.
+
+            YOUR TASK:
+            Based on the provided {conversation}, determine the next logical step.
+            Analyze the Conversation: Review the user's symptoms and your previous questions.
+
+            Decide Your Action:
+            If more information is needed and you are under the 10-question limit, ask the single most important follow-up question to narrow down the potential causes.
+            If you have enough information or have reached the 10-question limit, provide a final analysis.
+
+            """ + """
+            INSTRUCTIONS FOR ASKING A QUESTION:
+            Formulate a Question: Base your question on a standard diagnostic framework (e.g., OPQRST: Onset, Provocation/Palliation, Quality, Region/Radiation, Severity, Timing). For example, ask about the symptom's location, what makes it better or worse, its duration, or its severity.
+            Provide Options: Offer 4-5 clear, distinct, and helpful multiple-choice options.
+            
+            Format: 
+            Respond with the following JSON structure:
+            {
+                "question": "...", 
+                "options": ["...", "...", "..."], 
+                "is_final": false
+            }    
+            
+            """
+
+
+
+    # Generate response
     try:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -68,11 +115,15 @@ def symptom_check():
             # config=GenerateContentConfig(
             #     system_instruction=system_instruction,
             #     ))
+            
         # Clean the response to ensure it's valid JSON
         cleaned_text = response.text.strip().lstrip('```json').rstrip('```').strip()
         response_json = json.loads(cleaned_text)
         return jsonify(response_json)
     
+    
+    
+    # Exception Handling
     except json.JSONDecodeError:
         return jsonify({"error": "AI response was not valid JSON."}), 500
     except Exception as e:
@@ -80,6 +131,8 @@ def symptom_check():
         return jsonify({"error": "An unexpected error occurred with the AI service."}), 500
 
 
+
+# Main Component Server
 if __name__ == '__main__':
     app.run(port=5328, debug=True)
 

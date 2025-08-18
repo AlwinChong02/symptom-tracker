@@ -28,6 +28,7 @@ export default function Navbar() {
                 <Link href="/symptom-checker" className="font-medium text-gray-500 hover:text-gray-900">Checker</Link>
                 <Link href="/history" className="font-medium text-gray-500 hover:text-gray-900">History</Link>
                 <Link href="/medication-reminders" className="font-medium text-gray-500 hover:text-gray-900">Reminders</Link>
+                <Link href="/profile" className="font-medium text-gray-500 hover:text-gray-900">Profile</Link>
                 <button 
                   onClick={handleLogout} 
                   className="font-medium text-indigo-600 hover:text-indigo-500"

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/dbConnect';
-import Medication from '../../../models/Medication';
+import Medication from '../../../models/Reminder';
 import { getUserIdFromRequest } from '../../../lib/auth'; // Hypothetical auth utility
 
 async function getUserId(req) {

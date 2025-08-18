@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navbar from '../../components/Navbar';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -35,8 +36,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Create Your Account</h1>
         <form onSubmit={handleSubmit}>
           {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}
@@ -79,6 +82,7 @@ export default function Register() {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

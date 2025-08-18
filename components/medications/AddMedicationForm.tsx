@@ -6,7 +6,12 @@ interface AddMedicationFormProps {
 }
 
 export default function AddMedicationForm({ onMedicationAdded }: AddMedicationFormProps) {
-  const [newMed, setNewMed] = useState({ name: '', dosage: '', frequency: '', times: '' });
+  const [newMed, setNewMed] = useState({ 
+    name: '', 
+    dosage: '', 
+    frequency: '', 
+    times: '' 
+  });
   const [error, setError] = useState('');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -19,7 +24,7 @@ export default function AddMedicationForm({ onMedicationAdded }: AddMedicationFo
     setError('');
     try {
       await addMedication({ 
-        ...newMed, 
+        ...newMed,
         times: newMed.times.split(',').map(t => t.trim())
       });
       setNewMed({ name: '', dosage: '', frequency: '', times: '' }); // Clear form

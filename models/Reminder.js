@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-const MedicationSchema = new mongoose.Schema({
-  user: {
+const RemindersSchema = new mongoose.Schema({
+  user: {        
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -28,4 +28,4 @@ const MedicationSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.models.Medication || mongoose.model('Medication', MedicationSchema);
+export default mongoose.models.Reminder || mongoose.model('Reminder', RemindersSchema);

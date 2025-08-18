@@ -1,13 +1,26 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../lib/authContext';
+import Navbar from '../../components/Navbar';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { user, login, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+
+  if (loading || user) {
+    return <div>Loading...</div>; // Or a spinner component
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +36,8 @@ export default function Login() {
       });
 
       if (res.ok) {
-        // No token to store, just redirect
+        const { user } = await res.json();
+        login(user); // Save user data and token
         router.push('/'); // Redirect to homepage/dashboard after login
       } else {
         const data = await res.json();
@@ -35,8 +49,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Login to Your Account</h1>
         <form onSubmit={handleSubmit}>
           {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}
@@ -68,6 +84,7 @@ export default function Login() {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

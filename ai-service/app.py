@@ -18,9 +18,12 @@ client = genai.Client(
 )
 # -------------------------
 
-@app.route('/api/symptom-tracker', methods=['POST', 'GET'])
+@app.route('/api/symptom-checker', methods=['POST'])
 def symptom_check():
-    """Handles the conversational symptom check."""
+    
+    """
+    Handles the conversational symptom check.
+    """
     data = request.get_json()
     if not data or 'history' not in data:
         return jsonify({"error": "Invalid request. 'history' is required."}), 400
@@ -32,26 +35,30 @@ def symptom_check():
         prompt = f"""
         The conversation history is:\n{conversation}\n
         You have reached the maximum number of questions (10). Based on the complete history, you MUST provide a final analysis with possible causes and recommended actions. Do not ask any more questions.
-        
-        Respond in JSON format for a final analysis: {{"analysis": "...", "is_final": true}}
+        """ + """
+        Respond in JSON format for a final analysis: { 'summary': '...', 'suggested_causes': [{'title': '...', 'description': '...'}], 'treatment_plans': [{'title': '...', 'description': '...'}], 'is_final': true }
         """
-    elif not history:
+        
+    elif len(history) == 0:
         # Initial question
         prompt = """
-        You are an AI medical assistant. Your first task is to ask the user about their primary symptom. Please provide a question and 4-5 relevant options.
-        Format the output as a JSON object with three keys: 'question' (string), 'options' (array of strings), and 'is_final' (boolean, set to false).
-        Example: {"question": "What is your primary symptom?", "options": ["Headache", "Fever", "Cough", "Fatigue"], "is_final": false}
+        You are an AI medical assistant. Your first task is to ask the user a single, clear question about their primary symptom or the most concerning problem they're experiencing.
+        Provide 4-5 relevant options for the user to choose from.
+        Format the output as a JSON object with three keys: 'question' (a single string), 'options' (an array of strings), and 'is_final' (boolean, set to false).
+        Example: {"question": "What is your primary symptom or the most concerning problem you're experiencing?", "options": ["Chest pain", "Difficulty breathing", "Abdominal pain", "Severe headache", "Dizziness/Lightheadedness"], "is_final": false}
         """
     else:
         prompt = f"""
-        Continue a conversation with a user about their symptoms. The history is:\n{conversation}\n
-        Based on this, ask the next most relevant question to diagnose the issue, providing 4-5 options.
-        If you have enough information, provide a final analysis with possible causes and recommended actions.
-        A maximum of you can ask the user are 10 questions in total. Count the conversation first before releasing a new question.
-        
+        You are an AI medical assistant continuing a conversation with a user about their symptoms. You have already asked the primary symptom. Now, ask a follow-up question to better understand their condition based on the conversation history:
+        {conversation}
+
+        Ask the next most relevant question to diagnose the issue and provide 4-5 helpful options.
+        If you have sufficient information, provide a final analysis with possible causes and recommended actions.
+        You can ask a maximum of 10 questions in total. Please check the conversation length before asking a new question.
+        """ + """
         Respond in JSON. 
-        For a question: {{"question": "...", "options": ["..."], "is_final": false}}
-        For a final analysis: {{"analysis": "...", "is_final": true}}
+        For a question: {"question": "...", "options": ["..."], "is_final": false}
+        For a final analysis: {"summary": "...", "suggested_causes": [{"title": "...", "description": "..."}], "treatment_plans": [{"title": "...", "description": "..."}], "is_final": true}
         """
 
     try:

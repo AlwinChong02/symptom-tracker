@@ -145,8 +145,8 @@ const ReminderForm = ({ reminder, onSave, onClose }: ReminderFormProps) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center">
+            <div className="bg-white/75 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
                 <h2 className="text-2xl font-bold mb-6">{reminder ? 'Edit Reminder' : 'Add New Reminder'}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">

@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from google import genai
 from config import ApiConfig
+from pymongo import MongoClient
+import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -18,6 +20,17 @@ client = genai.Client(
 )
 # -------------------------
 
+# --- Database Configuration ---
+try:
+    mongo_client = MongoClient(config.MONGODB_CONNECTION_STRING)
+    db = mongo_client[config.MONGODB_DB_NAME]
+    symptom_histories = db.symptomHistories         
+    print("MongoDB connection successful.")
+except Exception as e:
+    print(f"MongoDB connection failed: {e}")        
+# ---------------------------
+
+
 @app.route('/api/symptom-checker', methods=['POST'])
 def symptom_check():
     
@@ -25,18 +38,51 @@ def symptom_check():
     Handles the conversational symptom check.
     """
     data = request.get_json()
-    if not data or 'history' not in data:
-        return jsonify({"error": "Invalid request. 'history' is required."}), 400
+    if not data or 'history' not in data or 'userId' not in data:
+        return jsonify({"error": "Invalid request. 'history' and 'userId' are required."}), 400
 
     history = data.get('history', [])
+    user_id = data.get('userId')
     conversation = "\n".join([f"Q: {item.get('question', '')}\nA: {item.get('answer', '')}" for item in history])
 
     if len(history) >= 10:
+        
+        # For final analysis
         prompt = f"""
             The conversation history is:\n{conversation}\n
-            You have reached the maximum number of questions (10). Based on the complete history, you MUST provide a final analysis with possible causes and recommended actions. Do not ask any more questions.
+            You have reached the maximum number of questions (10).
+            
+            You are an AI Medical Analyst. Your function is to synthesize the entirety of a user's conversation into a structured, educational, and safe final analysis. You must act with the utmost caution, prioritizing user safety and clarity.
+
+            CORE PRINCIPLES:
+            1. Synthesize, Don't Diagnose: Your analysis is a summary of information and possibilities, not a medical diagnosis.
+            2. Stratify Risk: Clearly differentiate between conditions that can be managed at home, those that require a doctor's visit, and those that are urgent.
+            3. Provide Rationale: Do not simply state possibilities. Briefly explain why the user's symptoms align with a particular suggestion. This demonstrates your reasoning.
+                        
+            INSTRUCTIONS:          
+            1. Summarize: Briefly summarize the key symptoms the user has described.
+            2. Suggest Causes: List 2-3 potential, common causes for the symptoms. Do not list rare or life-threatening conditions unless it is a clear emergency.
+            3. Recommend Actions: Suggest safe, general next steps. NEVER prescribe medication or specific treatments. Focus on actions like "Consult a healthcare professional," "Monitor your symptoms," or "Consider over-the-counter pain relievers if appropriate."            
+            
             """ + """
-            Respond in JSON format for a final analysis: { 'summary': '...', 'suggested_causes': [{'title': '...', 'description': '...'}], 'treatment_plans': [{'title': '...', 'description': '...'}], 'is_final': true }
+            Format the output as a single JSON object with the following keys:
+            'summary': A brief summary of the key symptoms.
+            'suggested_causes': A list of 2-3 potential causes for the symptoms.
+            'recommended_actions': A list of 2-3 recommended actions for the user.
+            'is_final': A boolean indicating whether this is the final response.
+            
+            Example: 
+            {
+                "summary": "...",
+                "suggested_causes": [
+                    {"name": "...", "description": "..."}
+                ],
+                "recommended_actions": [
+                    {"action": "...", "details": "..."}
+                ],
+                "is_final": true
+            }          
+            
             """
         
     elif len(history) == 0:
@@ -78,7 +124,6 @@ def symptom_check():
             You are an AI Medical Triage Assistant. Your primary goal is to help users understand their symptoms by asking targeted questions. You must be empathetic, clear, and cautious.
 
             CRITICAL DIRECTIVES:
-
             You are NOT a doctor. Your analysis is not a diagnosis. Your primary function is to gather information and suggest appropriate next steps.
             Emergency Detection: If at any point the user's symptoms suggest a medical emergency (e.g., severe chest pain, difficulty breathing, uncontrolled bleeding, sudden confusion, signs of a stroke), your only response must be a final analysis advising them to contact emergency services immediately.
 
@@ -109,22 +154,43 @@ def symptom_check():
 
     # Generate response
     try:
+
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt,)
-            # config=GenerateContentConfig(
-            #     system_instruction=system_instruction,
-            #     ))
-            
+        # config=GenerateContentConfig(
+        #     system_instruction=system_instruction,
+        #     ))
+        
         # Clean the response to ensure it's valid JSON
         cleaned_text = response.text.strip().lstrip('```json').rstrip('```').strip()
         response_json = json.loads(cleaned_text)
+        
+        print("Response JSON:", response_json)
+        # If the analysis is final, save it to the database
+        if response_json.get('is_final'):
+            try:
+                # Use update_one with upsert=True to create a new document if one doesn't exist.
+                # This is a more robust approach than finding and then updating.
+                symptom_histories.update_one(
+                    {'userId': user_id, 'createdAt': datetime.datetime.now()},
+                    {'$set': {
+                        'analysis': response_json,
+                        'symptoms': history
+                        }
+                    },
+                )
+                print(f"Final analysis saved for user {user_id}")
+            except Exception as e:
+                print(f"Error saving to MongoDB: {e}")
+
         return jsonify(response_json)
     
     
     
     # Exception Handling
     except json.JSONDecodeError:
+        print("AI response was not valid JSON.")
         return jsonify({"error": "AI response was not valid JSON."}), 500
     except Exception as e:
         print(f"An unexpected error occurred: {e}")

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSymptomCheckResponse } from '../../lib/api';
 import withAuth from '../../components/auth/withAuth';
+import { useAuth } from '../../lib/authContext';
 
 // --- Type Definitions ---
 interface ChatItem {
@@ -12,18 +13,23 @@ interface ChatItem {
   question?: string;
 }
 
-interface AnalysisItem {
-  title: string;
-  description: string;
+interface SuggestedCause {
+  name: string;
+  description: string;  
 }
 
-interface ApiResponse {
+interface RecommendedAction {
+  action: string;
+  details: string;
+}
+
+interface FinalAnalysisResponse {
   is_final: boolean;
   question?: string;
   options?: string[];
   summary?: string;
-  suggested_causes?: AnalysisItem[];
-  treatment_plans?: AnalysisItem[];
+  suggested_causes?: SuggestedCause[];
+  recommended_actions?: RecommendedAction[];
 }
 
 // --- Icon Components ---
@@ -73,10 +79,11 @@ const TypingIndicator = () => (
 
 // --- Main Component ---
 function SymptomChecker() {
+  const { user } = useAuth();
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
   const [currentOptions, setCurrentOptions] = useState<string[]>([]);
   const [isFinal, setIsFinal] = useState(false);
-  const [finalAnalysis, setFinalAnalysis] = useState<ApiResponse | null>(null);
+  const [finalAnalysis, setFinalAnalysis] = useState<FinalAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -90,13 +97,13 @@ function SymptomChecker() {
   useEffect(scrollToBottom, [chatHistory]);
 
   const getNextQuestion = useCallback(async (historyForApi: ChatItem[]) => {
-    const processAndSetResponse = (data: ApiResponse, historyForApi: ChatItem[]) => {
+    const processAndSetResponse = (data: FinalAnalysisResponse, historyForApi: ChatItem[]) => {
       if (data.is_final) {
         setFinalAnalysis(data);
         setIsFinal(true);
         setCurrentOptions([]);
         const finalMessage: ChatItem = { from: 'ai', text: data.summary || 'Final analysis completed.' };
-        saveHistory([...historyForApi, finalMessage]);
+        saveHistory([...historyForApi, finalMessage], data);
       } else {
         setChatHistory(prev => [...prev, { from: 'ai', text: data.question || "" }]);
         setCurrentOptions(data.options || []);
@@ -109,22 +116,34 @@ function SymptomChecker() {
       const apiHistory = historyForApi
         .filter(item => item.from === 'user')
         .map(item => ({ question: item.question, answer: item.text }));
-      const data = await getSymptomCheckResponse(apiHistory);
+      const data = await getSymptomCheckResponse(apiHistory, user?.id);
       processAndSetResponse(data, historyForApi);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
-  const saveHistory = async (finalHistory: ChatItem[]) => {
-    const symptomsToSave = finalHistory.filter((item: ChatItem) => item.from === 'user').map((item: ChatItem) => ({ question: item.question, answer: item.text }));
+  const saveHistory = async (finalHistory: ChatItem[], analysis: FinalAnalysisResponse | null) => {
+    const symptomsToSave = finalHistory
+      .filter((item: ChatItem) => item.from === 'user')
+      .map((item: ChatItem) => ({ question: item.question, answer: item.text }));
+    
+    const payload = {
+      symptoms: symptomsToSave,
+      analysis: analysis ? {
+        summary: analysis.summary,
+        suggested_causes: analysis.suggested_causes,
+        recommended_actions: analysis.recommended_actions,
+      } : null,
+    };
+
     try {
       await fetch('/api/symptoms/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symptoms: symptomsToSave }),
+        body: JSON.stringify(payload),
       });
     } catch (err) {
       setError((err as Error).message);
@@ -132,8 +151,10 @@ function SymptomChecker() {
   };
 
   useEffect(() => {
-    getNextQuestion([]);
-  }, [getNextQuestion]);
+    if (user) {
+      getNextQuestion([]);
+    }
+  }, [getNextQuestion, user]);
 
   const handleOptionClick = (optionText: string) => {
     const lastQuestion = (chatHistory.slice().reverse().find((item: ChatItem) => item.from === 'ai') as ChatItem)?.text;
@@ -160,7 +181,7 @@ function SymptomChecker() {
                       <li key={i} className="flex items-start">
                         <DocumentIcon />
                         <div className="ml-3">
-                          <h3 className="font-semibold text-gray-800">{cause.title}</h3>
+                          <h3 className="font-semibold text-gray-800">{cause.name}</h3>
                           <p className="text-gray-600">{cause.description}</p>
                         </div>
                       </li>
@@ -169,12 +190,12 @@ function SymptomChecker() {
                 </SummaryCard>
                 <SummaryCard title="Recommended Treatment Plans" icon={<ShieldIcon />}>
                   <ul className="space-y-4">
-                    {finalAnalysis.treatment_plans?.map((plan, i) => (
+                    {finalAnalysis.recommended_actions?.map((plan, i) => (
                       <li key={i} className="flex items-start">
                         <DocumentIcon />
                         <div className="ml-3">
-                          <h3 className="font-semibold text-gray-800">{plan.title}</h3>
-                          <p className="text-gray-600">{plan.description}</p>
+                          <h3 className="font-semibold text-gray-800">{plan.action}</h3>
+                          <p className="text-gray-600">{plan.details}</p>
                         </div>
                       </li>
                     ))}

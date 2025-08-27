@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/dbConnect';
 import Medication from '../../../models/Reminder';
 import { getUserIdFromRequest } from '../../../lib/auth'; // Hypothetical auth utility
+import User from '../../../models/User';
+import { sendEmail } from '../../../lib/email';
 
 async function getUserId(req) {
   try {
@@ -15,6 +17,7 @@ async function getUserId(req) {
   }
 }
 
+// GET all medications for a user
 export async function GET(req) {
   await dbConnect();
   const userId = await getUserId(req);
@@ -38,9 +41,14 @@ export async function POST(req) {
   }
 
   try {
-    const { name, dosage, frequency, times } = await req.json();
+    const { name, dosage, frequency, times, daysOfWeek, startDate } = await req.json();
+
     if (!name || !dosage || !frequency || !times) {
       return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
+    }
+
+    if (frequency === 'Weekly' && (!daysOfWeek || daysOfWeek.length === 0)) {
+      return NextResponse.json({ success: false, message: 'Days of the week are required for weekly frequency.' }, { status: 400 });
     }
 
     const medication = await Medication.create({
@@ -49,7 +57,25 @@ export async function POST(req) {
       dosage,
       frequency,
       times,
+      daysOfWeek: frequency === 'Weekly' ? daysOfWeek : [],
+      startDate: startDate ? new Date(startDate) : undefined,
     });
+    // Send Email confirmation (best-effort)
+    try {
+      const user = await User.findById(userId).select('name email');
+      if (user?.email) {
+        const timeList = Array.isArray(times) ? times.join(', ') : String(times || '');
+        const weekly = frequency === 'Weekly' && Array.isArray(daysOfWeek) && daysOfWeek.length > 0 ? ` on ${daysOfWeek.join(', ')}` : '';
+        const when = frequency === 'Daily' ? `daily at ${timeList}` : frequency === 'Weekly' ? `weekly${weekly} at ${timeList}` : `at ${timeList}`;
+        const subject = `Medication reminder created: ${name}`;
+        const text = `Hi ${user.name || ''}, your medication reminder has been created.\n\nName: ${name}\nDosage: ${dosage}\nSchedule: ${when}`;
+        const html = `<p>Hi ${user.name || ''}, your medication reminder has been created.</p><ul><li><b>Name:</b> ${name}</li><li><b>Dosage:</b> ${dosage}</li><li><b>Schedule:</b> ${when}</li></ul>`;
+        await sendEmail({ to: user.email, subject, text, html });
+      }
+    } catch (e) {
+      console.error('Email notify failed:', e);
+    }
+
     return NextResponse.json({ success: true, data: medication }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to create medication.' }, { status: 400 });

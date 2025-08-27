@@ -4,17 +4,20 @@ import { useState, useEffect, useCallback } from 'react';
 import AddMedicationForm from '../../components/medications/AddMedicationForm';
 import MedicationList from '../../components/medications/MedicationList';
 import { getMedications } from '../../lib/api';
+import type { ReminderRecord } from '@/types/reminder';
 
 export default function MedicationsPage() {
-  const [medications, setMedications] = useState([]);
+  const [medications, setMedications] = useState<ReminderRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const fetchMedications = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await getMedications();
-      setMedications(data);
+      
+      const res = (await getMedications()) as { success: boolean; data: ReminderRecord[] };
+      setMedications(res.data);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {

@@ -1,15 +1,8 @@
 import { FC } from 'react';
-
-interface Medication {
-  _id: string;
-  name: string;
-  dosage: string;
-  frequency: string;
-  times: string[];
-}
+import type { ReminderRecord } from '@/types/reminder';
 
 interface MedicationListProps {
-  medications: Medication[];
+  medications: ReminderRecord[];
 }
 
 const MedicationList: FC<MedicationListProps> = ({ medications }) => {
@@ -22,7 +15,16 @@ const MedicationList: FC<MedicationListProps> = ({ medications }) => {
             <div key={med._id} className="p-4 border rounded-lg flex justify-between items-center">
               <div>
                 <p className="font-bold text-lg">{med.name}</p>
-                <p className="text-sm text-gray-600">{med.dosage} - {med.frequency} at {Array.isArray(med.times) ? med.times.join(', ') : ''}</p>
+                <p className="text-sm text-gray-600">
+                  {med.dosage} - {med.frequency}
+                  {Array.isArray(med.times) && med.times.length > 0 && ` at ${med.times.join(', ')}`}
+                </p>
+                {med.startDate && (
+                  <p className="text-xs text-gray-500">Start: {new Date(med.startDate).toLocaleDateString()}</p>
+                )}
+                {Array.isArray(med.daysOfWeek) && med.daysOfWeek.length > 0 && (
+                  <p className="text-xs text-gray-500">Days: {med.daysOfWeek.join(', ')}</p>
+                )}
               </div>
               {/* Placeholder for future actions like edit/delete */}
             </div>

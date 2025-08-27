@@ -22,6 +22,13 @@ const RemindersSchema = new mongoose.Schema({
     type: [String], // e.g., ['08:00', '20:00']
     required: true,
   },
+  daysOfWeek: {
+    type: [String],
+    default: [], // e.g., ['Monday', 'Wednesday', 'Friday']
+  },
+  startDate: {
+    type: Date, // Optional start date for the medication/reminder schedule
+  },
   active: {
     type: Boolean,
     default: true,

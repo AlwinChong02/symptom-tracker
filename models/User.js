@@ -23,7 +23,15 @@ const UserSchema = new mongoose.Schema({
   },
   birthdate: {
     type: Date,
-  }
+  },
+  phone: {
+    type: String,
+    match: [/^\+?[0-9]{7,15}$/u, 'Please provide a valid phone number (include country code, e.g., +14155552671).'],
+  },
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
+  },
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

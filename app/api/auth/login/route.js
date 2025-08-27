@@ -26,9 +26,20 @@ export async function POST(req) {
     }
 
 
-    return NextResponse.json({ success: true, user: { id: user.id, name: user.name, email: user.email } });
+    return NextResponse.json({ 
+      success: true, 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email,
+        phone: user.phone || '',
+        gender: user.gender || '',
+        birthdate: user.birthdate ? user.birthdate.toISOString() : null,
+      } 
+    });
   } catch (error) {
 
     return NextResponse.json({ success: false, message: error.message }, { status: 400 });
   }
 }
+

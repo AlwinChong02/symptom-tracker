@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '../../components/Navbar';
+// import Navbar from '../../components/Navbar';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [birthdate, setBirthdate] = useState('');
+  const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -21,7 +24,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, birthdate, phone, gender }),
       });
 
       if (res.ok) {
@@ -75,6 +78,45 @@ export default function Register() {
               required
             />
           </div>
+          <div className="mb-4">
+            <label htmlFor="birthdate" className="block text-gray-700 text-sm font-bold mb-2">Birthdate</label>
+            <input
+              type="date"
+              id="birthdate"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              value={birthdate}
+              onChange={(e) => setBirthdate(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="phone" className="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              placeholder="+14155552671"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label htmlFor="gender" className="block text-gray-700 text-sm font-bold mb-2">Gender</label>
+            <select
+              id="gender"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              required
+            >
+              <option value="" disabled>Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
           <div className="flex items-center justify-between">
             <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
               Register
@@ -86,3 +128,4 @@ export default function Register() {
     </div>
   );
 }
+

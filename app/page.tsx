@@ -1,7 +1,6 @@
 "use client";
 
 import Link from 'next/link';
-import Navbar from '../components/Navbar';
 import { useAuth } from '../lib/authContext';
 
 const Feature = ({ title, description, step }: { title: string, description: string, step: string }) => (
@@ -20,74 +19,65 @@ export default function Home() {
   const { user } = useAuth();
 
   return (
-    <div className="bg-white">
+    <div>
       <main>
-        <div className="relative">
-          <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
-            <div className="relative shadow-xl sm:rounded-2xl sm:overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+            {/* Left: Symptom Checker */}
+            <section className="relative shadow-xl rounded-2xl overflow-hidden">
               <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-800 to-indigo-700 mix-blend-multiply" />
               </div>
-              <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
-                <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  <span className="block text-white">How are you feeling today?</span>
+              <div className="relative px-6 py-16 sm:px-8 sm:py-24 lg:py-28">
+                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-5xl text-white">
+                  How are you feeling today?
                 </h1>
-                <p className="mt-6 max-w-lg mx-auto text-center text-xl text-indigo-200 sm:max-w-3xl">
+                <p className="mt-6 max-w-xl text-xl text-indigo-200">
                   Our smart symptom checker can help you understand your symptoms and what to do next.
                 </p>
-                <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
-                  <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:gap-5">
+                <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                  <Link
+                    href="/symptom-checker"
+                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50"
+                  >
+                    Start Symptom Check
+                  </Link>
+                  {user && (
                     <Link
-                      href="/symptom-checker"
-                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 sm:px-8"
+                      href="/history"
+                      className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-500 hover:bg-indigo-600"
                     >
-                      Start Symptom Check
+                      View History
                     </Link>
-                    {user && (
-                      <Link
-                        href="/history"
-                        className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-500 hover:bg-indigo-600 sm:px-8"
-                      >
-                        View History
-                      </Link>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        {/* How it works section */}
-        <div className="bg-gray-100 py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                How It Works
-              </h2>
-              <p className="mt-4 text-lg text-gray-500">
-                A simple, three-step process to understand your health.
-              </p>
-            </div>
-            <div className="mt-12">
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Right: How it works */}
+            <section className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl p-8 shadow-sm">
+              <div>
+                <h2 className="text-3xl font-extrabold text-gray-900">How It Works</h2>
+                <p className="mt-3 text-lg text-gray-600">A simple, three-step process to understand your health.</p>
+              </div>
+              <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2">
                 <Feature
                   step="1"
                   title="Answer simple questions"
-                  description="Our chat-based system will guide you through a series of easy-to-understand questions about your symptoms."
+                  description="Our chat-based system will guide you through easy questions about your symptoms."
                 />
                 <Feature
                   step="2"
                   title="AI-powered analysis"
-                  description="Our intelligent system analyzes your responses against a vast medical database to identify potential causes."
+                  description="We analyze your responses to identify potential causes."
                 />
                 <Feature
                   step="3"
                   title="Receive your assessment"
-                  description="Get a personalized health assessment that explains possible conditions and recommends next steps."
+                  description="Get a personalized assessment and recommended next steps."
                 />
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </main>

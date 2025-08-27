@@ -4,51 +4,58 @@ import React, { useState } from 'react';
 import { FaBell, FaClock, FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { FaPencilAlt } from 'react-icons/fa';
+import type { Frequency, DayOfWeek } from '@/types/reminder';
 
-interface Reminder {
+interface ReminderUI {
     id: number;
     name: string;
-    time: string;
     dosage: string;
-    frequency: string;
+    frequency: Frequency;
+    times: string[];
+    startDate?: string;
+    daysOfWeek?: DayOfWeek[];
 }
 
-type ReminderFormData = Omit<Reminder, 'id'>;
+type ReminderFormData = Omit<ReminderUI, 'id'>;
 
-const initialReminders: Reminder[] = [
+const initialReminders: ReminderUI[] = [
     {
         id: 1,
         name: 'Amoxicillin',
-        time: '8:00 AM, 8:00 PM',
         dosage: '250mg twice daily',
-        frequency: 'Every day for 7 days',
+        frequency: 'Daily',
+        times: ['08:00', '20:00'],
+        startDate: new Date().toISOString().slice(0, 10),
     },
     {
         id: 2,
         name: 'Lisinopril',
-        time: '9:00 AM',
         dosage: '10mg once daily',
-        frequency: 'Every morning indefinitely',
+        frequency: 'Daily',
+        times: ['09:00'],
+        startDate: new Date().toISOString().slice(0, 10),
     },
     {
         id: 3,
         name: 'Multivitamin',
-        time: '12:00 PM',
         dosage: '1 tablet daily',
-        frequency: 'Every day',
+        frequency: 'Weekly',
+        times: ['12:00'],
+        daysOfWeek: ['Monday', 'Wednesday', 'Friday'],
+        startDate: new Date().toISOString().slice(0, 10),
     },
 ];
 
 const MedicationReminders = () => {
-    const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
+    const [reminders, setReminders] = useState<ReminderUI[]>(initialReminders);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentReminder, setCurrentReminder] = useState<Reminder | null>(null);
+    const [currentReminder, setCurrentReminder] = useState<ReminderUI | null>(null);
 
     const handleAddReminder = (reminderData: ReminderFormData) => {
         setReminders([...reminders, { ...reminderData, id: Date.now() }]);
     };
 
-    const handleUpdateReminder = (updatedReminder: Reminder) => {
+    const handleUpdateReminder = (updatedReminder: ReminderUI) => {
         setReminders(reminders.map(r => r.id === updatedReminder.id ? updatedReminder : r));
     };
 
@@ -56,7 +63,7 @@ const MedicationReminders = () => {
         setReminders(reminders.filter(r => r.id !== id));
     };
 
-    const openModal = (reminder: Reminder | null = null) => {
+    const openModal = (reminder: ReminderUI | null = null) => {
         setCurrentReminder(reminder);
         setIsModalOpen(true);
     };
@@ -86,7 +93,10 @@ const MedicationReminders = () => {
                             <div className="space-y-3 text-gray-600">
                                 <div className="flex items-center">
                                     <FaClock className="mr-3" />
-                                    <span>{reminder.time}</span>
+                                    <span>
+                                        {Array.isArray(reminder.times) ? reminder.times.join(', ') : ''}
+                                        {reminder.startDate && ` • Start: ${new Date(reminder.startDate).toLocaleDateString()}`}
+                                    </span>
                                 </div>
                                 <div className="flex items-center">
                                     <FaPencilAlt className="mr-3" />
@@ -94,7 +104,11 @@ const MedicationReminders = () => {
                                 </div>
                                 <div className="flex items-center">
                                     <FiRepeat className="mr-3" />
-                                    <span>{reminder.frequency}</span>
+                                    <span>
+                                        {reminder.frequency}
+                                        {reminder.frequency === 'Weekly' && reminder.daysOfWeek && reminder.daysOfWeek.length > 0 &&
+                                            ` • ${reminder.daysOfWeek.join(', ')}`}
+                                    </span>
                                 </div>
                             </div>
                             <div className="flex justify-end mt-6 space-x-2">
@@ -113,7 +127,7 @@ const MedicationReminders = () => {
                         reminder={currentReminder}
                         onSave={(data) => {
                             if (data.id) {
-                                handleUpdateReminder(data as Reminder);
+                                handleUpdateReminder(data as ReminderUI);
                             } else {
                                 handleAddReminder(data);
                             }
@@ -128,20 +142,36 @@ const MedicationReminders = () => {
 };
 
 interface ReminderFormProps {
-    reminder: Reminder | null;
+    reminder: ReminderUI | null;
     onSave: (data: ReminderFormData & { id?: number }) => void;
     onClose: () => void;
 }
 
 const ReminderForm = ({ reminder, onSave, onClose }: ReminderFormProps) => {
     const [name, setName] = useState(reminder?.name || '');
-    const [time, setTime] = useState(reminder?.time || '');
     const [dosage, setDosage] = useState(reminder?.dosage || '');
-    const [frequency, setFrequency] = useState(reminder?.frequency || '');
+    const [frequency, setFrequency] = useState<Frequency>(reminder?.frequency || 'Daily');
+    const [times, setTimes] = useState<string[]>(reminder?.times || ['']);
+    const [startDate, setStartDate] = useState<string>(reminder?.startDate || '');
+    const [daysOfWeek, setDaysOfWeek] = useState<DayOfWeek[]>(reminder?.daysOfWeek || []);
+
+    const addTimeInput = () => setTimes((prev) => [...prev, '']);
+    const removeTimeInput = (idx: number) => setTimes((prev) => prev.filter((_, i) => i !== idx));
+    const handleTimeChange = (idx: number, value: string) => setTimes((prev) => prev.map((t, i) => (i === idx ? value : t)));
+    const toggleDay = (day: DayOfWeek) =>
+        setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ ...(reminder || {}), name, time, dosage, frequency });
+        onSave({
+            ...(reminder || {}),
+            name,
+            dosage,
+            frequency,
+            times: times.filter(Boolean),
+            startDate: startDate || undefined,
+            daysOfWeek: frequency === 'Weekly' ? daysOfWeek : [],
+        });
     };
 
     return (
@@ -154,8 +184,37 @@ const ReminderForm = ({ reminder, onSave, onClose }: ReminderFormProps) => {
                         <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Time</label>
-                        <input type="text" value={time} onChange={(e) => setTime(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Times</label>
+                        {times.map((t, idx) => (
+                            <div key={idx} className="flex items-center gap-2 mb-2">
+                                <input
+                                    type="time"
+                                    value={t}
+                                    onChange={(e) => handleTimeChange(idx, e.target.value)}
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    required
+                                />
+                                {times.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeTimeInput(idx)}
+                                        className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                                    >
+                                        &times;
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                        <button type="button" onClick={addTimeInput} className="text-blue-600 text-sm">+ Add another time</button>
                     </div>
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2">Dosage</label>
@@ -163,7 +222,33 @@ const ReminderForm = ({ reminder, onSave, onClose }: ReminderFormProps) => {
                     </div>
                     <div className="mb-6">
                         <label className="block text-gray-700 text-sm font-bold mb-2">Frequency</label>
-                        <input type="text" value={frequency} onChange={(e) => setFrequency(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+                        <select
+                            value={frequency}
+                            onChange={(e) => setFrequency(e.target.value as Frequency)}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            required
+                        >
+                            <option value="Daily">Daily</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="As Needed">As Needed</option>
+                        </select>
+                        {frequency === 'Weekly' && (
+                            <div className="mt-3">
+                                <label className="block text-gray-700 text-sm font-semibold mb-2">Select Days</label>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                                    {(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as DayOfWeek[]).map((day) => (
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            onClick={() => toggleDay(day)}
+                                            className={`p-2 border rounded text-sm ${daysOfWeek.includes(day) ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                                        >
+                                            {day.slice(0,3)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center justify-end">
                         <button type="button" onClick={onClose} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">

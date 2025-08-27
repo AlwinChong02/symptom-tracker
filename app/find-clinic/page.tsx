@@ -10,16 +10,17 @@ export default function FindClinicPage() {
   // and pass it to the ClinicMap component.
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Find a Clinic Near You</h1>
-        <p className="mb-4 text-gray-600">
-          To use this feature, please ensure you have a Google Maps API key configured in your environment variables.
+        <h1 className="text-3xl font-bold mb-2 text-gray-900">Find a Clinic Near You</h1>
+        <p className="mb-6 text-gray-700">
+          This map uses your device location and Google Places to show nearby clinics.
+          Set <code className="px-1 py-0.5 bg-white/60 rounded border">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> in your <code>.env.local</code>.
         </p>
-        
-        {error && <p className="text-red-500 text-center mb-4">Error: {error}</p>}
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        {error && <p className="text-red-600 mb-4">Error: {error}</p>}
+
+        <div className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl p-4 shadow-sm">
           <ClinicMap onError={setError} />
         </div>
       </div>

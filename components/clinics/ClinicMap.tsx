@@ -20,6 +20,14 @@ type ClinicMarker = {
 const containerStyle = { width: '100%', height: '520px' };
 const libraries: ("places")[] = ["places"];
 
+type LocationType = 'clinic' | 'pharmacy' | 'hospital';
+
+const locationTypeConfig = {
+  clinic: { keyword: 'clinic', type: 'doctor', label: 'Clinics', icon: '🏥' },
+  pharmacy: { keyword: 'pharmacy', type: 'pharmacy', label: 'Pharmacies', icon: '💊' },
+  hospital: { keyword: 'hospital', type: 'hospital', label: 'Hospitals', icon: '🏨' },
+};
+
 const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -29,6 +37,8 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
   const [center, setCenter] = useState<LatLngLiteral | null>(null);
   const [markers, setMarkers] = useState<ClinicMarker[]>([]);
   const [selected, setSelected] = useState<ClinicMarker | null>(null);
+  const [selectedType, setSelectedType] = useState<LocationType>('clinic');
+  const [loading, setLoading] = useState(false);
   const mapRef = useRef<any>(null);
 
   useEffect(() => {
@@ -59,23 +69,26 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
     mapRef.current = map;
   }, []);
 
-  // Search for clinics near the center using Places API
-  useEffect(() => {
+  // Search for locations near the center using Places API
+  const searchNearbyPlaces = useCallback((locationType: LocationType) => {
     if (!isLoaded || !mapRef.current || !center) return;
     const google = (window as any).google;
     if (!google?.maps?.places) return;
 
+    setLoading(true);
+    const config = locationTypeConfig[locationType];
     const service = new google.maps.places.PlacesService(mapRef.current);
     const request = {
       location: center,
       radius: 3000,
-      keyword: 'clinic',
-      type: 'doctor',
+      keyword: config.keyword,
+      type: config.type,
     };
 
     service.nearbySearch(request, (results: any, status: any) => {
+      setLoading(false);
       if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
-        onError('No clinics found nearby.');
+        onError(`No ${config.label.toLowerCase()} found nearby.`);
         setMarkers([]);
         return;
       }
@@ -84,7 +97,7 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
         .map((r: any) => ({
           id: r.place_id || r.name,
           position: { lat: r.geometry.location.lat(), lng: r.geometry.location.lng() },
-          name: r.name || 'Clinic',
+          name: r.name || config.label.slice(0, -1),
           address: r.vicinity || r.formatted_address,
           rating: r.rating,
           placeId: r.place_id,
@@ -98,12 +111,51 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
     });
   }, [center, isLoaded, onError]);
 
+  // Initial search when center is available
+  useEffect(() => {
+    if (center) {
+      searchNearbyPlaces(selectedType);
+    }
+  }, [center, searchNearbyPlaces, selectedType]);
+
+  const handleTypeChange = (type: LocationType) => {
+    setSelectedType(type);
+    setSelected(null);
+    searchNearbyPlaces(type);
+  };
+
   if (!isLoaded) return <div className="text-center p-8 bg-white/60 rounded-lg">Loading map…</div>;
   if (!center) return <div className="text-center p-8 bg-white/60 rounded-lg">Locating…</div>;
 
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-      <GoogleMap
+    <div className="space-y-4">
+      {/* Location Type Filter Buttons */}
+      <div className="flex flex-wrap gap-2 justify-center">
+        {(Object.keys(locationTypeConfig) as LocationType[]).map((type) => {
+          const config = locationTypeConfig[type];
+          return (
+            <button
+              key={type}
+              onClick={() => handleTypeChange(type)}
+              disabled={loading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedType === type
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white/80 text-gray-700 hover:bg-white border border-gray-200'
+              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span className="text-lg">{config.icon}</span>
+              <span>{config.label}</span>
+              {loading && selectedType === type && (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+        <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
         zoom={14}
@@ -153,6 +205,7 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
           </InfoWindowF>
         )}
       </GoogleMap>
+      </div>
     </div>
   );
 };

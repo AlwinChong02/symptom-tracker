@@ -15,7 +15,6 @@ export default function FindClinicPage() {
         <h1 className="text-3xl font-bold mb-2 text-gray-900">Find a Clinic Near You</h1>
         <p className="mb-6 text-gray-700">
           This map uses your device location and Google Places to show nearby clinics.
-          Set <code className="px-1 py-0.5 bg-white/60 rounded border">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> in your <code>.env.local</code>.
         </p>
 
         {error && <p className="text-red-600 mb-4">Error: {error}</p>}

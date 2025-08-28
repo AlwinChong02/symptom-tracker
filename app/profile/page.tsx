@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import MessageDialog, { type MessageType } from '@/components/ui/MessageDialog';
 
 export default function ProfilePage() {
   // Profile fields
@@ -16,6 +17,12 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<MessageType>('info');
+  const [dialogMessage, setDialogMessage] = useState('');
+  const [dialogTitle, setDialogTitle] = useState<string | undefined>(undefined);
 
   // Load current profile
   useEffect(() => {
@@ -39,6 +46,13 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
+  const showDialog = (type: MessageType, message: string, title?: string) => {
+    setDialogType(type);
+    setDialogMessage(message);
+    setDialogTitle(title);
+    setDialogOpen(true);
+  };
+
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setMessage('');
@@ -51,9 +65,9 @@ export default function ProfilePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to update profile.');
-      setMessage('Profile updated successfully.');
+      showDialog('success', 'Profile updated successfully.', 'Profile Updated');
     } catch (e: any) {
-      setError(e.message);
+      showDialog('error', e.message, 'Profile Update Failed');
     }
   };
 
@@ -63,7 +77,7 @@ export default function ProfilePage() {
     setError('');
 
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match.');
+      showDialog('error', 'New passwords do not match.', 'Password Mismatch');
       return;
     }
 
@@ -80,17 +94,18 @@ export default function ProfilePage() {
         throw new Error(data.message || 'Something went wrong.');
       }
 
-      setMessage(data.message);
+      showDialog('success', data.message, 'Password Changed');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setError(err.message);
+      showDialog('error', err.message, 'Password Change Failed');
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 space-y-6">
+    <div className="min-h-screen bg-[#F6ECD9] p-8">
+      <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Profile</h1>
 
       <form onSubmit={handleProfileSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8">
@@ -214,9 +229,15 @@ export default function ProfilePage() {
             Change Password
           </button>
         </div>
-        {message && <p className="mt-4 text-green-500">{message}</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
       </form>
+      </div>
+      <MessageDialog
+        open={dialogOpen}
+        type={dialogType}
+        title={dialogTitle}
+        message={dialogMessage}
+        onClose={() => setDialogOpen(false)}
+      />
     </div>
   );
 }

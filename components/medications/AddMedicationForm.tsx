@@ -4,11 +4,13 @@ import type { Frequency, DayOfWeek } from '@/types/reminder';
 
 interface AddMedicationFormProps {
   onMedicationAdded: () => void; // Callback to refresh the list
+  onSuccess?: (message: string) => void;
+  onError?: (message: string) => void;
 }
 
 const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-export default function AddMedicationForm({ onMedicationAdded }: AddMedicationFormProps) {
+export default function AddMedicationForm({ onMedicationAdded, onSuccess, onError }: AddMedicationFormProps) {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [frequency, setFrequency] = useState<Frequency>('Daily');
@@ -58,8 +60,11 @@ export default function AddMedicationForm({ onMedicationAdded }: AddMedicationFo
       setDaysOfWeek([]);
       setStartDate('');
       onMedicationAdded(); // Trigger refresh
+      onSuccess?.('Medication reminder added successfully.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      const msg = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(msg);
+      onError?.(msg);
     }
   };
 

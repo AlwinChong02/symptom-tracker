@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/authContext';
-import Navbar from '../../components/Navbar';
+import MessageDialog, { type MessageType } from '@/components/ui/MessageDialog';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,6 +11,11 @@ export default function Login() {
   const [error, setError] = useState('');
   const router = useRouter();
   const { user, login, loading } = useAuth();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<MessageType>('info');
+  const [dialogMessage, setDialogMessage] = useState('');
+  const [dialogTitle, setDialogTitle] = useState<string | undefined>(undefined);
+  const [redirectOnClose, setRedirectOnClose] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) {
@@ -19,7 +24,7 @@ export default function Login() {
   }, [user, loading, router]);
 
   if (loading || user) {
-    return <div>Loading...</div>; // Or a spinner component
+    return <div className="min-h-screen bg-[#F6ECD9] flex items-center justify-center">Loading...</div>;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,24 +42,33 @@ export default function Login() {
 
       if (res.ok) {
         const { user } = await res.json();
-        login(user); // Save user data and token
-        router.push('/'); // Redirect to homepage/dashboard after login
+        login(user);
+        setDialogType('success');
+        setDialogTitle('Login Successful');
+        setDialogMessage('Welcome back! Redirecting to your dashboard.');
+        setDialogOpen(true);
+        setRedirectOnClose('/');
       } else {
         const data = await res.json();
-        setError(data.message || 'Something went wrong.');
+        setDialogType('error');
+        setDialogTitle('Login Failed');
+        setDialogMessage(data.message || 'Something went wrong.');
+        setDialogOpen(true);
       }
     } catch (error) {
-      setError('An unexpected error occurred.');
+      setDialogType('error');
+      setDialogTitle('Login Error');
+      setDialogMessage('An unexpected error occurred.');
+      setDialogOpen(true);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#F6ECD9]">
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Login to Your Account</h1>
         <form onSubmit={handleSubmit}>
-          {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}
           <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email Address</label>
             <input
@@ -85,6 +99,20 @@ export default function Login() {
         </form>
         </div>
       </div>
+      <MessageDialog
+        open={dialogOpen}
+        type={dialogType}
+        title={dialogTitle}
+        message={dialogMessage}
+        onClose={() => {
+          setDialogOpen(false);
+          if (redirectOnClose) {
+            const path = redirectOnClose;
+            setRedirectOnClose(null);
+            router.push(path);
+          }
+        }}
+      />
     </div>
   );
 }

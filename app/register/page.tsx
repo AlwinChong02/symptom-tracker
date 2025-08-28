@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 // import Navbar from '../../components/Navbar';
+import MessageDialog, { type MessageType } from '@/components/ui/MessageDialog';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -13,6 +14,11 @@ export default function Register() {
   const [gender, setGender] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<MessageType>('info');
+  const [dialogMessage, setDialogMessage] = useState('');
+  const [dialogTitle, setDialogTitle] = useState<string | undefined>(undefined);
+  const [redirectOnClose, setRedirectOnClose] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,23 +34,32 @@ export default function Register() {
       });
 
       if (res.ok) {
-        router.push('/login');
+        setDialogType('success');
+        setDialogTitle('Registration Successful');
+        setDialogMessage('Your account has been created. Please log in.');
+        setDialogOpen(true);
+        setRedirectOnClose('/login');
       } else {
         const data = await res.json();
-        setError(data.message || 'Something went wrong.');
+        setDialogType('error');
+        setDialogTitle('Registration Failed');
+        setDialogMessage(data.message || 'Something went wrong.');
+        setDialogOpen(true);
       }
     } catch (error) {
-      setError('An unexpected error occurred.');
+      setDialogType('error');
+      setDialogTitle('Registration Error');
+      setDialogMessage('An unexpected error occurred.');
+      setDialogOpen(true);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#F6ECD9]">
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Create Your Account</h1>
         <form onSubmit={handleSubmit}>
-          {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}
           <div className="mb-4">
             <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Name</label>
             <input
@@ -125,6 +140,20 @@ export default function Register() {
         </form>
         </div>
       </div>
+      <MessageDialog
+        open={dialogOpen}
+        type={dialogType}
+        title={dialogTitle}
+        message={dialogMessage}
+        onClose={() => {
+          setDialogOpen(false);
+          if (redirectOnClose) {
+            const path = redirectOnClose;
+            setRedirectOnClose(null);
+            router.push(path);
+          }
+        }}
+      />
     </div>
   );
 }

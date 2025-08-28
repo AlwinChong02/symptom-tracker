@@ -62,13 +62,13 @@ def symptom_check():
             INSTRUCTIONS:          
             1. Summarize: Briefly summarize the key symptoms the user has described.
             2. Suggest Causes: List 2-3 potential, common causes for the symptoms. Do not list rare or life-threatening conditions unless it is a clear emergency.
-            3. Recommend Actions: Suggest safe, general next steps. NEVER prescribe medication or specific treatments. Focus on actions like "Consult a healthcare professional," "Monitor your symptoms," or "Consider over-the-counter pain relievers if appropriate."            
+            3. Treatment Plans: Suggest safe, general next steps. NEVER prescribe medication or specific treatments. Focus on actions like "Consult a healthcare professional," "Monitor your symptoms," or "Consider over-the-counter pain relievers if appropriate."            
             
             """ + """
             Format the output as a single JSON object with the following keys:
             'summary': A brief summary of the key symptoms.
             'suggested_causes': A list of 2-3 potential causes for the symptoms.
-            'recommended_actions': A list of 2-3 recommended actions for the user.
+            'treatment_plans': A list of 2-3 recommended actions for the user.
             'is_final': A boolean indicating whether this is the final response.
             
             Example: 
@@ -77,7 +77,7 @@ def symptom_check():
                 "suggested_causes": [
                     {"name": "...", "description": "..."}
                 ],
-                "recommended_actions": [
+                "treatment_plans": [
                     {"action": "...", "details": "..."}
                 ],
                 "is_final": true
@@ -96,7 +96,7 @@ def symptom_check():
             1. A brief, friendly greeting.
             2. A single, clear question to identify their primary symptom.
             3. A list of 5-6 common, high-level symptom categories as options.
-            4. An "Other" or "Something else" option to ensure the user can always proceed.   
+            4. An "Other" option to ensure the user can always proceed.   
             
             FORMATTING INSTRUCTIONS:
             Format the output as a single JSON object with the following keys:

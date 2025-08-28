@@ -18,7 +18,7 @@ interface SuggestedCause {
   description: string;  
 }
 
-interface RecommendedAction {
+interface TreatmentPlan {
   action: string;
   details: string;
 }
@@ -29,7 +29,7 @@ interface FinalAnalysisResponse {
   options?: string[];
   summary?: string;
   suggested_causes?: SuggestedCause[];
-  recommended_actions?: RecommendedAction[];
+  treatment_plans?: TreatmentPlan[];
 }
 
 // --- Icon Components ---
@@ -89,6 +89,9 @@ function SymptomChecker() {
   const router = useRouter();
 
   const chatEndRef = useRef<null | HTMLDivElement>(null);
+  const otherInputRef = useRef<HTMLInputElement | null>(null);
+  const [otherMode, setOtherMode] = useState(false);
+  const [otherText, setOtherText] = useState('');
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -125,6 +128,18 @@ function SymptomChecker() {
     }
   }, [user]);
 
+  // Reset and focus handling for "Other" custom input
+  useEffect(() => {
+    setOtherMode(false);
+    setOtherText('');
+  }, [currentOptions]);
+
+  useEffect(() => {
+    if (otherMode) {
+      otherInputRef.current?.focus();
+    }
+  }, [otherMode]);
+
   const saveHistory = async (finalHistory: ChatItem[], analysis: FinalAnalysisResponse | null) => {
     const symptomsToSave = finalHistory
       .filter((item: ChatItem) => item.from === 'user')
@@ -133,9 +148,10 @@ function SymptomChecker() {
     const payload = {
       symptoms: symptomsToSave,
       analysis: analysis ? {
-        summary: analysis.summary,
-        suggested_causes: analysis.suggested_causes,
-        recommended_actions: analysis.recommended_actions,
+        summary: analysis.summary || '',
+        // Map to DB schema: { title, description }
+        suggested_causes: (analysis.suggested_causes || []).map(c => ({ title: c.name, description: c.description })),
+        treatment_plans: (analysis.treatment_plans || []).map(p => ({ title: p.action, description: p.details })),
       } : null,
     };
 
@@ -165,8 +181,15 @@ function SymptomChecker() {
     getNextQuestion(newChatHistory);
   };
 
+  const submitOther = () => {
+    const value = otherText.trim();
+    if (!value) return;
+    setOtherMode(false);
+    handleOptionClick(value);
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[#F6ECD9] min-h-screen">
       <div className="flex flex-col h-[calc(100vh-4rem)]">
         <div className="flex-grow overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto space-y-4">
@@ -190,7 +213,7 @@ function SymptomChecker() {
                 </SummaryCard>
                 <SummaryCard title="Recommended Treatment Plans" icon={<ShieldIcon />}>
                   <ul className="space-y-4">
-                    {finalAnalysis.recommended_actions?.map((plan, i) => (
+                    {finalAnalysis.treatment_plans?.map((plan, i) => (
                       <li key={i} className="flex items-start">
                         <DocumentIcon />
                         <div className="ml-3">
@@ -217,15 +240,50 @@ function SymptomChecker() {
         <div className="bg-white border-t border-gray-200 p-4 shadow-up">
           {!loading && !isFinal && (
             <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
-              {currentOptions.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleOptionClick(option)}
-                  className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
-                >
-                  {option}
-                </button>
-              ))}
+              {currentOptions.map((option, index) => {
+                const isOther = option === 'Other';
+                if (isOther) {
+                  return (
+                    <div key={`other-${index}`} className="flex items-center">
+                      {otherMode ? (
+                        <div className="flex w-full items-center bg-white border border-indigo-600 rounded-lg overflow-hidden">
+                          <input
+                            ref={otherInputRef}
+                            type="text"
+                            value={otherText}
+                            onChange={(e) => setOtherText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') submitOther(); }}
+                            placeholder="Type your symptom"
+                            className="flex-1 px-4 py-3 outline-none"
+                          />
+                          <button
+                            onClick={submitOther}
+                            className="px-4 py-3 bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setOtherMode(true)}
+                          className="w-full bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
+                        >
+                          {option}
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleOptionClick(option)}
+                    className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
+                  >
+                    {option}
+                  </button>
+                );
+              })}
             </div>
           )}
           {isFinal && (

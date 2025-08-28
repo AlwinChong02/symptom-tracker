@@ -76,8 +76,8 @@ export default function HistoryPage() {
   if (error) return <div className="min-h-screen flex items-center justify-center"><p className="text-red-500">{error}</p></div>;
 
   const AnalysisModal = ({ analysis, onClose }: { analysis: Analysis; onClose: () => void; }) => (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl relative">
+    <div className="fixed inset-0 bg-black/30 flex justify-center items-center p-4 z-50">
+      <div className="bg-white/95 backdrop-blur-sm p-8 rounded-lg shadow-xl w-full max-w-2xl relative">
         <h2 className="text-2xl font-bold mb-4">Final Analysis</h2>
         <div className="text-gray-700 max-h-[70vh] overflow-y-auto">
           <div className="mb-4">
@@ -113,7 +113,7 @@ export default function HistoryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-[#F6ECD9] p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold mb-6 text-gray-800">Symptom History</h1>
         {history.length > 0 ? (

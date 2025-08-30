@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import MessageDialog, { type MessageType } from '@/components/ui/MessageDialog';
+import MessageDialog from '@/components/ui/MessageDialog';
+import type { MessageType } from '@/types/ui';
 
 export default function ProfilePage() {
   // Profile fields

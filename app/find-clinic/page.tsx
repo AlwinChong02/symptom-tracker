@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import ClinicMap from '../../components/clinics/ClinicMap';
 
 export default function FindClinicPage() {
   const [error, setError] = useState('');
 
-  // In a real app, you might fetch the user's location here
-  // and pass it to the ClinicMap component.
+  const handleError = useCallback((message: string) => {
+    setError(message);
+  }, []);
 
   return (
     <div className="p-8">
@@ -20,7 +21,7 @@ export default function FindClinicPage() {
         {error && <p className="text-red-600 mb-4">Error: {error}</p>}
 
         <div className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl p-4 shadow-sm">
-          <ClinicMap onError={setError} />
+          <ClinicMap onError={handleError} />
         </div>
       </div>
     </div>

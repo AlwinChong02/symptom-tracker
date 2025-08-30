@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 // import Navbar from '../../components/Navbar';
-import MessageDialog, { type MessageType } from '@/components/ui/MessageDialog';
+import MessageDialog from '@/components/ui/MessageDialog';
+import type { MessageType } from '@/types/ui';
 
 export default function Register() {
   const [name, setName] = useState('');

@@ -1,14 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import AddMedicationForm from '../../components/medications/AddMedicationForm';
-import MedicationList from '../../components/medications/MedicationList';
-import EditMedicationModal from '../../components/medications/EditMedicationModal';
-import MessageDialog, { type MessageType } from '@/components/ui/MessageDialog';
-import { getMedications, deleteMedication, updateMedication } from '../../lib/api';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+
+// import ui components
+import MessageDialog from '@/components/ui/MessageDialog';
+import type { MessageType } from '@/types/ui';
+
+// import api functions
+import { getMedications, deleteMedication, updateMedication } from '@/lib/api';
 import type { ReminderRecord } from '@/types/reminder';
 
-export default function MedicationsPage() {
+// import custom components
+import MedicationList from '@/components/medications/MedicationList';
+import EditMedicationModal from '@/components/medications/EditMedicationModal';
+import AddMedicationForm from '@/components/medications/AddMedicationForm';
+import withAuth from '@/components/auth/withAuth';
+
+
+function MedicationReminderPage() {
   const [medications, setMedications] = useState<ReminderRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,14 +45,14 @@ export default function MedicationsPage() {
     fetchMedications();
   }, [fetchMedications]);
 
-  const showDialog = (type: MessageType, message: string, title?: string) => {
+  const showDialog = useCallback((type: MessageType, message: string, title?: string) => {
     setDialogType(type);
     setDialogMessage(message);
     setDialogTitle(title);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteMedication(id);
       showDialog('success', 'Medication reminder deleted.');
@@ -52,13 +61,13 @@ export default function MedicationsPage() {
       const msg = err instanceof Error ? err.message : 'Failed to delete reminder.';
       showDialog('error', msg);
     }
-  };
+  }, [showDialog, fetchMedications]);
 
-  const handleEdit = (medication: ReminderRecord) => {
+  const handleEdit = useCallback((medication: ReminderRecord) => {
     setEditingMedication(medication);
-  };
+  }, []);
 
-  const handleUpdate = async (updatedData: Partial<ReminderRecord>) => {
+  const handleUpdate = useCallback(async (updatedData: Partial<ReminderRecord>) => {
     if (!editingMedication) return;
     try {
       await updateMedication(editingMedication._id, updatedData);
@@ -69,11 +78,11 @@ export default function MedicationsPage() {
       const msg = err instanceof Error ? err.message : 'Failed to update reminder.';
       showDialog('error', msg);
     }
-  };
+  }, [editingMedication, showDialog, fetchMedications]);
 
   if (loading) return <div className="min-h-screen bg-[#F6ECD9] flex items-center justify-center"><p>Loading medications...</p></div>;
   if (error) return <div className="min-h-screen bg-[#F6ECD9] flex items-center justify-center"><p className="text-red-500">Error: {error}</p></div>;
-
+  
   return (
     <div className="min-h-screen bg-[#F6ECD9] p-8">
       <div className="max-w-4xl mx-auto">
@@ -83,7 +92,11 @@ export default function MedicationsPage() {
           onSuccess={(m) => showDialog('success', m)}
           onError={(m) => showDialog('error', m)}
         />
-        <MedicationList medications={medications} onDelete={handleDelete} onEdit={handleEdit} />
+        <MedicationList 
+          medications={medications} 
+          onDelete={handleDelete} 
+          onEdit={handleEdit} 
+        />
       </div>
       <EditMedicationModal
         medication={editingMedication}
@@ -101,3 +114,6 @@ export default function MedicationsPage() {
     </div>
   );
 }
+
+export default withAuth(MedicationReminderPage);
+

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSymptomCheckResponse } from '../../lib/api';
 import withAuth from '../../components/auth/withAuth';
 import { useAuth } from '../../lib/authContext';
+import { FiShield } from 'react-icons/fi';
 
 // --- Type Definitions ---
 interface ChatItem {
@@ -35,7 +36,6 @@ interface FinalAnalysisResponse {
 // --- Icon Components ---
 const HeartIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>;
 const AlertIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
-const ShieldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.944a12.02 12.02 0 009 3.044a12.02 12.02 0 009-3.044c0-3.313-1.323-6.313-3.432-8.568z" /></svg>;
 const DocumentIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
 
 const SummaryCard = ({ title, children, icon }: { title: string, children: React.ReactNode, icon: React.ReactNode }) => (
@@ -189,10 +189,12 @@ function SymptomChecker() {
   };
 
   return (
-    <div className="bg-[#F6ECD9] min-h-screen">
+    <div className="bg-[#F6ECD9] max-h-screen">
       <div className="flex flex-col h-[calc(100vh-4rem)]">
         <div className="flex-grow overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto space-y-4">
+
+            {/* Final Analysis */}
             {isFinal && finalAnalysis ? (
               <div className="max-w-3xl mx-auto">
                 <SummaryCard title="AI Symptom Summary" icon={<HeartIcon />}>
@@ -211,7 +213,7 @@ function SymptomChecker() {
                     ))}
                   </ul>
                 </SummaryCard>
-                <SummaryCard title="Recommended Treatment Plans" icon={<ShieldIcon />}>
+                <SummaryCard title="Recommended Treatment Plans" icon={<FiShield className="h-5 w-5" />}>
                   <ul className="space-y-4">
                     {finalAnalysis.treatment_plans?.map((plan, i) => (
                       <li key={i} className="flex items-start">
@@ -237,8 +239,10 @@ function SymptomChecker() {
             {error && <p className="text-red-500 text-center">Error: {error}</p>}
           </div>
         </div>
-        <div className="bg-white border-t border-gray-200 p-4 shadow-up">
+        {/* border corner rounded */}
+        <div className="mx-24 my-8 bg-white border-b-emerald-500 p-4 shadow-up rounded-2xl">
           {!loading && !isFinal && (
+          
             <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
               {currentOptions.map((option, index) => {
                 const isOther = option === 'Other';
@@ -246,7 +250,7 @@ function SymptomChecker() {
                   return (
                     <div key={`other-${index}`} className="flex items-center">
                       {otherMode ? (
-                        <div className="flex w-full items-center bg-white border border-indigo-600 rounded-lg overflow-hidden">
+                        <div className="flex w-full items-center bg-white border border-emerald-50 rounded-lg overflow-hidden">
                           <input
                             ref={otherInputRef}
                             type="text"
@@ -258,7 +262,7 @@ function SymptomChecker() {
                           />
                           <button
                             onClick={submitOther}
-                            className="px-4 py-3 bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+                            className="px-4 py-3 bg-emerald-50 hover:bg-emerald-700 font-semibold hover:text-black"
                           >
                             Submit
                           </button>
@@ -266,7 +270,7 @@ function SymptomChecker() {
                       ) : (
                         <button
                           onClick={() => setOtherMode(true)}
-                          className="w-full bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
+                          className="w-full bg-[#053133] border-emerald-50 text-[#cbea99] hover:bg-[#cbea99] hover:text-[#053133] font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
                         >
                           {option}
                         </button>
@@ -278,7 +282,7 @@ function SymptomChecker() {
                   <button
                     key={index}
                     onClick={() => handleOptionClick(option)}
-                    className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
+                    className="bg-[#053133] border-emerald-50 text-[#cbea99] hover:bg-[#cbea99] hover:text-[#053133] font-semibold py-3 px-4 rounded-lg transition duration-200 ease-in-out text-center"
                   >
                     {option}
                   </button>

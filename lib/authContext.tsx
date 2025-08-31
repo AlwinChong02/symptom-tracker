@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useMemo, useCallback } from 'react';
 
 // Define the shape of the user object and the auth context
 interface User {
@@ -10,6 +10,7 @@ interface User {
   phone?: string;
   gender?: string;
   birthdate?: string | null;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (userData: User) => void;
   logout: () => void;
+  isAdmin: boolean;
 }
 
 // Create the context with a default undefined value
@@ -36,18 +38,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData: User) => {
+  const login = useCallback((userData: User) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('user');
     setUser(null);
-  };
+  }, []);
+
+  const isAdmin = useMemo(() => user?.role === 'admin', [user]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    loading,
+    login,
+    logout,
+    isAdmin
+  }), [user, loading, login, logout, isAdmin]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

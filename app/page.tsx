@@ -73,13 +73,13 @@ export default function Home() {
   return (
     <div className={nunito.className}>
       <main>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
 
             {/* Left: How it works */}
-      <section id="how-it-works" className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm lg:col-span-2">
+            <section id="how-it-works" className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm lg:col-span-2">
               <div>
-        <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-semibold tracking-wide">Your AI Health Companion</span>
+                <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-semibold tracking-wide">Your AI Health Companion</span>
                 <h2 className="mt-3 text-3xl font-extrabold text-gray-900">How It Works</h2>
                 <p className="mt-2 text-base sm:text-lg text-gray-600">A simple, three-step process to understand your health.</p>
               </div>
@@ -101,6 +101,7 @@ export default function Home() {
                 </Link>
               </div>
             </section>
+
             {/* Right: Symptom Checker */}
             <section id="hero" className="relative shadow-xl rounded-2xl overflow-hidden lg:col-span-3">
               <div className="absolute inset-0">
@@ -131,27 +132,8 @@ export default function Home() {
                       View History
                     </Link>
                   )}
-                  <Link
-                    href="#how-it-works"
-                    className="inline-flex items-center justify-center px-5 py-3 text-base font-medium rounded-md shadow-sm text-white/90 ring-1 ring-white/40 hover:bg-white/10"
-                  >
-                    How it works
-                  </Link>
                 </div>
-                <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-white/90">
-                  <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 ring-1 ring-white/20">
-                    <FiZap className="h-5 w-5" />
-                    <span className="text-sm">Takes about 2 minutes</span>
-                  </div>
-                  <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 ring-1 ring-white/20">
-                    <FiShield className="h-5 w-5" />
-                    <span className="text-sm">Your data stays on your device</span>
-                  </div>
-                  <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 ring-1 ring-white/20">
-                    <FiClock className="h-5 w-5" />
-                    <span className="text-sm">Come back anytime</span>
-                  </div>
-                </div>
+
               </div>
             </section>
 

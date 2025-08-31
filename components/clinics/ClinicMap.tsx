@@ -2,25 +2,10 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleMap, InfoWindowF, MarkerF, useLoadScript } from '@react-google-maps/api';
-
-interface ClinicMapProps {
-  onError: (message: string) => void;
-}
-
-type LatLngLiteral = { lat: number; lng: number };
-type ClinicMarker = {
-  id: string;
-  position: LatLngLiteral;
-  name: string;
-  address?: string;
-  rating?: number;
-  placeId?: string;
-};
+import type { ClinicMapProps, LatLngLiteral, ClinicMarker, LocationType } from '@/types/clinic';
 
 const containerStyle = { width: '100%', height: '520px' };
 const libraries: ("places")[] = ["places"];
-
-type LocationType = 'clinic' | 'pharmacy' | 'hospital';
 
 const locationTypeConfig = {
   clinic: { keyword: 'clinic', type: 'doctor', label: 'Clinics', icon: '🏥' },
@@ -140,7 +125,7 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
               disabled={loading}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 selectedType === type
-                  ? 'bg-indigo-600 text-white shadow-md'
+                  ? 'bg-green-600 text-white shadow-md'
                   : 'bg-white/80 text-gray-700 hover:bg-white border border-gray-200'
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
@@ -189,7 +174,7 @@ const ClinicMap: FC<ClinicMapProps> = ({ onError }) => {
                 <p className="text-sm text-gray-600 mb-1">{selected.address}</p>
               )}
               {typeof selected.rating === 'number' && (
-                <p className="text-sm text-gray-700">Rating: {selected.rating.toFixed(1)}★</p>
+                <p className="text-sm text-gray-700">Rating: {selected.rating.toFixed(1)} ★</p>
               )}
               {selected.placeId && (
                 <a

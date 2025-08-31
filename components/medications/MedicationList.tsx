@@ -1,11 +1,5 @@
 import { FC } from 'react';
-import type { ReminderRecord } from '@/types/reminder';
-
-interface MedicationListProps {
-  medications: ReminderRecord[];
-  onEdit?: (med: ReminderRecord) => void;
-  onDelete?: (id: string) => void;
-}
+import type { MedicationListProps } from '@/types/medication';
 
 const MedicationList: FC<MedicationListProps> = ({ medications, onEdit, onDelete }) => {
   return (
@@ -14,7 +8,7 @@ const MedicationList: FC<MedicationListProps> = ({ medications, onEdit, onDelete
       {medications.length > 0 ? (
         <div className="space-y-4">
           {medications.map((med) => (
-            <div key={med._id} className="p-4 border rounded-lg flex justify-between items-center">
+            <div key={med._id} className="p-4 rounded-lg flex justify-between items-center">
               <div>
                 <p className="font-bold text-lg">{med.name}</p>
                 <p className="text-sm text-gray-600">
@@ -32,7 +26,7 @@ const MedicationList: FC<MedicationListProps> = ({ medications, onEdit, onDelete
                 {onEdit && (
                   <button
                     onClick={() => onEdit(med)}
-                    className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
+                    className="px-4 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
                   >
                     Edit
                   </button>
@@ -40,7 +34,7 @@ const MedicationList: FC<MedicationListProps> = ({ medications, onEdit, onDelete
                 {onDelete && (
                   <button
                     onClick={() => onDelete(med._id)}
-                    className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-sm"
+                    className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
                   >
                     Delete
                   </button>

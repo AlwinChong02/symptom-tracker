@@ -1,12 +1,6 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback, useMemo } from 'react';
 import type { ReminderRecord, Frequency, DayOfWeek } from '@/types/reminder';
-
-interface EditMedicationModalProps {
-  medication: ReminderRecord | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onUpdate: (updatedData: Partial<ReminderRecord>) => void;
-}
+import type { EditMedicationModalProps } from '@/types/medication';
 
 const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -29,28 +23,29 @@ export default function EditMedicationModal({ medication, isOpen, onClose, onUpd
     }
   }, [medication]);
 
-  const handleTimeChange = (index: number, value: string) => {
-    const newTimes = [...times];
-    newTimes[index] = value;
-    setTimes(newTimes);
-  };
+  const handleTimeChange = useCallback((index: number, value: string) => {
+    setTimes(prev => {
+      const newTimes = [...prev];
+      newTimes[index] = value;
+      return newTimes;
+    });
+  }, []);
 
-  const addTimeInput = () => {
-    setTimes([...times, '']);
-  };
+  const addTimeInput = useCallback(() => {
+    setTimes(prev => [...prev, '']);
+  }, []);
 
-  const removeTimeInput = (index: number) => {
-    const newTimes = times.filter((_, i) => i !== index);
-    setTimes(newTimes);
-  };
+  const removeTimeInput = useCallback((index: number) => {
+    setTimes(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
-  const handleDayChange = (day: DayOfWeek) => {
+  const handleDayChange = useCallback((day: DayOfWeek) => {
     setDaysOfWeek(prev => 
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
-  };
+  }, []);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const updatedData = {
       name,
@@ -61,7 +56,7 @@ export default function EditMedicationModal({ medication, isOpen, onClose, onUpd
       startDate: startDate || undefined,
     };
     onUpdate(updatedData);
-  };
+  }, [name, dosage, frequency, times, daysOfWeek, startDate, onUpdate]);
 
   if (!isOpen || !medication) return null;
 
@@ -121,7 +116,7 @@ export default function EditMedicationModal({ medication, isOpen, onClose, onUpd
                     type="button"
                     key={day}
                     onClick={() => handleDayChange(day)}
-                    className={`p-2 border rounded text-sm ${daysOfWeek.includes(day) ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                    className={`p-2 border rounded-full text-sm transition-colors ${daysOfWeek.includes(day) ? 'bg-green-600 text-white border-green-600' : 'bg-gray-200 hover:bg-gray-300'}`}
                   >
                     {day.substring(0, 3)}
                   </button>
@@ -145,7 +140,7 @@ export default function EditMedicationModal({ medication, isOpen, onClose, onUpd
                   <button 
                     type="button" 
                     onClick={() => removeTimeInput(index)} 
-                    className="p-2 bg-red-500 text-white rounded"
+                    className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                   >
                     &times;
                   </button>
@@ -164,14 +159,14 @@ export default function EditMedicationModal({ medication, isOpen, onClose, onUpd
           <div className="flex gap-4 pt-4">
             <button 
               type="submit" 
-              className="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full transition-colors"
             >
               Update Reminder
             </button>
             <button 
               type="button" 
               onClick={onClose} 
-              className="flex-1 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full transition-colors"
             >
               Cancel
             </button>

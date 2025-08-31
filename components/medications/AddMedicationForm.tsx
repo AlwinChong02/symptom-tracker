@@ -1,12 +1,7 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useCallback } from 'react';
 import { addMedication } from '../../lib/api';
 import type { Frequency, DayOfWeek } from '@/types/reminder';
-
-interface AddMedicationFormProps {
-  onMedicationAdded: () => void; // Callback to refresh the list
-  onSuccess?: (message: string) => void;
-  onError?: (message: string) => void;
-}
+import type { AddMedicationFormProps } from '@/types/medication';
 
 const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -19,26 +14,27 @@ export default function AddMedicationForm({ onMedicationAdded, onSuccess, onErro
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
 
-  const handleTimeChange = (index: number, value: string) => {
-    const newTimes = [...times];
-    newTimes[index] = value;
-    setTimes(newTimes);
-  };
+  const handleTimeChange = useCallback((index: number, value: string) => {
+    setTimes(prev => {
+      const newTimes = [...prev];
+      newTimes[index] = value;
+      return newTimes;
+    });
+  }, []);
 
-  const addTimeInput = () => {
-    setTimes([...times, '']);
-  };
+  const addTimeInput = useCallback(() => {
+    setTimes(prev => [...prev, '']);
+  }, []);
 
-  const removeTimeInput = (index: number) => {
-    const newTimes = times.filter((_, i) => i !== index);
-    setTimes(newTimes);
-  };
+  const removeTimeInput = useCallback((index: number) => {
+    setTimes(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
-  const handleDayChange = (day: DayOfWeek) => {
+  const handleDayChange = useCallback((day: DayOfWeek) => {
     setDaysOfWeek(prev => 
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
-  };
+  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -105,7 +101,7 @@ export default function AddMedicationForm({ onMedicationAdded, onSuccess, onErro
                   type="button"
                   key={day}
                   onClick={() => handleDayChange(day)}
-                  className={`p-2 border rounded text-sm ${daysOfWeek.includes(day) ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                  className={`p-2 border rounded-full text-sm transition-colors ${daysOfWeek.includes(day) ? 'bg-green-600 text-white border-green-600' : 'bg-gray-200 hover:bg-gray-300'}`}
                 >
                   {day.substring(0, 3)}
                 </button>
@@ -126,7 +122,7 @@ export default function AddMedicationForm({ onMedicationAdded, onSuccess, onErro
                 required
               />
               {times.length > 1 && (
-                <button type="button" onClick={() => removeTimeInput(index)} className="p-2 bg-red-500 text-white rounded">
+                <button type="button" onClick={() => removeTimeInput(index)} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
                   &times;
                 </button>
               )}
@@ -137,7 +133,7 @@ export default function AddMedicationForm({ onMedicationAdded, onSuccess, onErro
           </button>
         </div>
 
-        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add Reminder</button>
+        <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full transition-colors">Add Reminder</button>
         {error && <p className="text-red-500 text-center mt-2">{error}</p>}
       </form>
     </div>

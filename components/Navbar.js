@@ -5,7 +5,7 @@ import { useAuth } from '../lib/authContext';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -28,9 +28,12 @@ export default function Navbar() {
                 <>
                   <Link href="/symptom-checker" className="font-medium text-gray-600 hover:text-gray-900">Checker</Link>
                   <Link href="/history" className="font-medium text-gray-600 hover:text-gray-900">History</Link>
-                  <Link href="/medications" className="font-medium text-gray-600 hover:text-gray-900">Reminders</Link>
+                  <Link href="/medication-reminder" className="font-medium text-gray-600 hover:text-gray-900">Reminders</Link>
                   <Link href="/find-clinic" className="font-medium text-gray-600 hover:text-gray-900">Find Clinic</Link>
                   <Link href="/profile" className="font-medium text-gray-600 hover:text-gray-900">Profile</Link>
+                  {isAdmin && (
+                    <Link href="/admin" className="font-medium text-red-600 hover:text-red-700">Admin</Link>
+                  )}
                   <button 
                     onClick={handleLogout} 
                     className="font-medium text-indigo-600 hover:text-indigo-500"

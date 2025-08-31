@@ -32,6 +32,13 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user',
+  },
+}, {
+  timestamps: true,
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

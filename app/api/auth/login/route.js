@@ -35,6 +35,7 @@ export async function POST(req) {
         phone: user.phone || '',
         gender: user.gender || '',
         birthdate: user.birthdate ? user.birthdate.toISOString() : null,
+        role: user.role || 'user',
       } 
     });
   } catch (error) {

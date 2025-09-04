@@ -62,7 +62,7 @@ def symptom_check():
             INSTRUCTIONS:          
             1. Summarize: Briefly summarize the key symptoms the user has described.
             2. Suggest Causes: List 2-3 potential, common causes for the symptoms. Do not list rare or life-threatening conditions unless it is a clear emergency.
-            3. Treatment Plans: Suggest safe, general next steps. NEVER prescribe medication or specific treatments. Focus on actions like "Consult a healthcare professional," "Monitor your symptoms," or "Consider over-the-counter pain relievers if appropriate."            
+            3. Treatment Plans: Suggest safe, general next steps. NEVER prescribe medication. Focus on actions like "Consult a healthcare professional," "Monitor your symptoms," or "Consider over-the-counter pain relievers if appropriate."            
             
             """ + """
             Format the output as a single JSON object with the following keys:
